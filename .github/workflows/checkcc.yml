@@ -1,0 +1,79 @@
+name: CICheckCC
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  mingw:
+    strategy:
+      fail-fast: true
+      matrix:
+        include: [
+          { msystem: MINGW64, project: 'mingw-gcc', bindir: 'win64_mingw-gcc' },
+          { msystem: CLANG64, project: 'mingw-clang', bindir: 'win64_mingw-clang' },
+        ]
+    name: mingw-${{ matrix.msystem }}
+    runs-on: windows-latest
+    steps:
+      - name: Prepare
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: make
+          pacboy: cc:p
+      - name: Check
+        shell: cmd
+        run: |
+          c++ --version
+  linux:
+    strategy:
+      fail-fast: true
+      matrix:
+        include: [
+          { config: debug, binsuffix: Debug },
+          { config: release, binsuffix: Release },
+        ]
+    name: linux-${{ matrix.config }}64
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check
+        run: |
+          gcc --version
+  osx:
+    strategy:
+      fail-fast: true
+      matrix:
+        include: [
+          { config: debug, binsuffix: Debug },
+          { config: release, binsuffix: Release },
+        ]
+    name: osx-x64-${{ matrix.config }}
+    runs-on: macos-latest
+    steps:
+      - name: Checkout bgfx
+        uses: actions/checkout@v3
+        with:
+          path: bgfx
+      - name: Checkout bx
+        uses: actions/checkout@v3
+        with:
+          repository: bkaradzic/bx
+          path: bx
+      - name: Checkout bimg
+        uses: actions/checkout@v3
+        with:
+          repository: bkaradzic/bimg
+          path: bimg
+      - name: Build
+        run: |
+          cd bgfx
+          make -j$(sysctl -n hw.physicalcpu) osx-x64-${{ matrix.config }}
+      - name: Check
+        run: |
+          clang --version
