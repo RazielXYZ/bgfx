@@ -31,6 +31,8 @@ jobs:
         shell: cmd
         run: |
           c++ --version
+          gcc --version
+          clang --version
   linux:
     strategy:
       fail-fast: true
@@ -56,24 +58,6 @@ jobs:
     name: osx-x64-${{ matrix.config }}
     runs-on: macos-latest
     steps:
-      - name: Checkout bgfx
-        uses: actions/checkout@v3
-        with:
-          path: bgfx
-      - name: Checkout bx
-        uses: actions/checkout@v3
-        with:
-          repository: bkaradzic/bx
-          path: bx
-      - name: Checkout bimg
-        uses: actions/checkout@v3
-        with:
-          repository: bkaradzic/bimg
-          path: bimg
-      - name: Build
-        run: |
-          cd bgfx
-          make -j$(sysctl -n hw.physicalcpu) osx-x64-${{ matrix.config }}
       - name: Check
         run: |
           clang --version
